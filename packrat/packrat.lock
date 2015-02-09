@@ -30,6 +30,17 @@ Source: CRAN
 Version: 3.98-1.1
 Hash: 13746d37588e7083349177d6e8234864
 
+Package: audio
+Source: CRAN
+Version: 0.1-5
+Hash: 3d02479ccb9a23ce6ad69705f848ec41
+
+Package: beepr
+Source: CRAN
+Version: 1.1
+Hash: 259f67ce902cd6033bb50329e3d676ad
+Requires: audio, stringr
+
 Package: bitops
 Source: CRAN
 Version: 1.0-6
@@ -135,14 +146,10 @@ Version: 4.6-10
 Hash: 6cfc4af49262a122c8ff130048e60375
 
 Package: rmarkdown
-Source: github
-Version: 0.2.64
-Hash: 7c5eea303a3e7a045cc08dd971db942d6bda8736
+Source: CRAN
+Version: 0.5.1
+Hash: 2d87f70c12c5558c50c4b3587fc6f499
 Requires: caTools, htmltools, knitr, yaml
-GithubRepo: rmarkdown
-GithubUsername: rstudio
-GithubRef: master
-GithubSha1: 7c5eea303a3e7a045cc08dd971db942d6bda8736
 
 Package: slam
 Source: CRAN
