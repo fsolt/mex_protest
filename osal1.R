@@ -1,17 +1,18 @@
-# Set working directory and log file
-setwd("/Users/fredsolt/Documents/Projects/Data/Protest/OSAL")
+# Download PDFs from OSAL and convert to plain text
 
-library(XML)
+url1 <- "http://www.clacso.org.ar/institucional/1h.php?idioma=" # Top page
+p1 <- iconv(readLines(url1), "iso-8859-1", "UTF-8") # Read top page and convert encoding
 
-# Load top page
-url1 <- ("http://www.clacso.org.ar/institucional/1h.php?idioma=")
-p1 <- readLines(url1)
-p2 <- iconv(x, "latin1", "UTF-8")
+lines <- grep("href=\\\".*link=.*\\\"", p1, value=T) # Identify lines with link stubs
 
-lines <- grep("href=\\\".*link=.*\\\"", p2, value=T)
-docs <- gsub(pattern=".*href=\\\".*(link=[0-9]*\\.pdf).*", 
-	replacement="http://www.clacso.org.ar/documentos_osal/descargar.php?\\1", x=lines)
+all.docs <- gsub(pattern=".*href=\\\".*(link=[0-9]*\\.pdf).*", 
+	replacement="http://www.clacso.org.ar/documentos_osal/descargar.php?\\1", x=lines) # Generate full links
 
-write(docs, file = "PDFs/osal.txt", ncolumns = 1)
-system("cd \"/Users/fredsolt/Documents/Projects/Data/Protest/OSAL/PDFs\";
-		wget -i osal.txt")
+dir.create("../PDFs", showWarnings = FALSE) # Make PDFs directory (outside of Git), if it doesn't already exist
+old.docs <- paste0("http://www.clacso.org.ar/documentos_osal/", list.files("../PDFs")) # Get list of files in PDFs directory
+
+new.docs <- all.docs[!all.docs %in% old.docs] # Make list of files available on website but not in PDFs directory
+write(new.docs, file = "../PDFs/new_docs.txt", ncolumns = 1) # Write this list of new files to text file
+
+system("cd \"../PDFs\"; wget -i new_docs.txt") # Download new files
+
