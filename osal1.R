@@ -40,8 +40,7 @@ lapply(new.texts, function(i){
 })
 
 
-
-### Identify files without extracted text and use OCR to make text files
+### Identify files with problems and use OCR to make text files
 # https://ryanfb.github.io/etc/2014/11/13/command_line_ocr_on_mac_os_x.html
 system("cd \"../Texts/\"; for f in *.txt; do echo \"$f\"; pcregrep -c '�' $f; done > \"crud.txt\"") # Count garbage characters in each text file
 crud <- data.frame(matrix(readLines("../Texts/crud.txt"), ncol=2, byrow=T), stringsAsFactors = F) # Read in the counts
@@ -61,7 +60,6 @@ lapply(crud$X1, function(i){
                 "./ocr.sh ../Scanned_PDFs/", ii, "; ",
                 "mv ", i, " ../Texts"))
 })
-
 
 
 ### Clean up text files
