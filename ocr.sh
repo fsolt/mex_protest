@@ -7,7 +7,7 @@ PREFIX=$(basename "$1" .pdf)
 echo "Current document: $PREFIX"
 echo "Converting to TIFF . . ."
 if command -v parallel >/dev/null 2>&1; then
-  LAST_PAGE=$(($(pdfinfo "$1"|grep '^Pages:'|awk '{print $2}') - 1))
+  LAST_PAGE=$(($(xpdf-pdfinfo "$1"|grep '^Pages:'|awk '{print $2}') - 1))
   parallel --bar -u convert -density 300 "$1"\[\{1\}\] -type Grayscale -compress lzw -background white +matte -depth 32 "${PREFIX}_page_%05d.tif" ::: $(seq 0 $LAST_PAGE)
 else
   convert -density 300 "$1" -type Grayscale -compress lzw -background white +matte -depth 32 "${PREFIX}_page_%05d.tif"
