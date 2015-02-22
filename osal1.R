@@ -26,7 +26,7 @@ write(new.pdfs, file = "../PDFs/new_pdfs.txt", ncolumns = 1) # Write this list o
 system("cd \"../PDFs\"; wget -i new_pdfs.txt; rm new_pdfs.txt") # Download new files
 
 
-### Extract text from PDFs and save (doesn't work for all files; some were scanned)
+### Extract text from PDFs and save (doesn't work for all files; some were scanned in by OSAL)
 all.texts <- gsub(".*=([0-9]*)\\.pdf", "\\1.txt", all.pdfs) # Make list of names of text files for all PDFs
 
 dir.create("../Texts", showWarnings = FALSE) # Make Texts directory (outside of Git), if it doesn't already exist
@@ -42,13 +42,13 @@ lapply(new.texts, function(i){
 
 ### Identify files with problems and use OCR to make text files
 # https://ryanfb.github.io/etc/2014/11/13/command_line_ocr_on_mac_os_x.html
-system("cd \"../Texts/\"; for f in *.txt; do echo \"$f\"; pcregrep -c '�' $f; done > \"crud.txt\"") # Count garbage characters in each text file
+system("cd \"../Texts/\"; for f in *.txt; do echo \"$f\"; pcregrep -c '�' $f; done > \"crud.txt\"") # Count lines of garbage characters in each text file
 crud <- data.frame(matrix(readLines("../Texts/crud.txt"), ncol=2, byrow=T), stringsAsFactors = F) # Read in the counts
 crud$X2 <- as.numeric(crud$X2) # Reformat count variable as numeric rather than string
 crud <- crud[crud$X2 > 4, ] # Files with more than four lines of garbage characters have problems and need OCR'd
 
-dir.create("../Scanned_PDFs", showWarnings = FALSE) # Make Scanned_PDFs directory (outside of Git), if it doesn't already exist
-dir.create("../Bad_Texts", showWarnings = FALSE) # Make Scanned_Texts directory (outside of Git), if it doesn't already exist
+dir.create("../Scanned_PDFs", showWarnings = FALSE) # Make Scanned_PDFs directory if it doesn't already exist
+dir.create("../Bad_Texts", showWarnings = FALSE) # Make Bad_Texts directory if it doesn't already exist
 
 # Move problematic texts from Texts directory to Bad_Texts directory, 
 # copy corresponding PDFs to Scanned_PDFs directory and then OCR them, 
@@ -61,7 +61,23 @@ lapply(crud$X1, function(i){
                 "mv ", i, " ../Texts"))
 })
 
+system("mv ../Texts/crud.txt ../Bad_Texts/crud.txt")   # Move file with count of garbage characters out of Texts directory
 
 ### Clean up text files
-# "/Users/fredsolt/Documents/Projects/Lat Am Protest 2/OSAL/OSAL2/osal_text_test.do"
+# First cut in "OSAL/OSAL2/osal_text_test.do"
+dir.create("../Clean_Texts", showWarnings = FALSE) # Make Clean_Texts directory if it doesn't already exist
+
+for (i in 1:length(all.texts)) {
+  text.file <- paste0("../Texts/", all.texts[i])
+  #  t <- readChar(text.file, file.info(text.file)$size) # Doesn't work because of embedded nuls in some text files (e.g., 100.txt)
+  t0 <- readBin(text.file, file.info(text.file)$size, what="raw") # Work around to account for embedded nuls in text files
+  t <- rawToChar(t0[t0!="00"])
+  
+  t2 <- gsub("\\n+\\s*\\d+\\s*\\n+", "\\\n", t)   # Omit lines with just page numbers
+  t2 <- gsub("\\n[^\n]*(Cronolog|OSAL|Osal)[^\n]*\\n", "\\\n", t2)  # Omit lines with headers
+  t2 <- gsub("([[:lower:]),])[[:blank:]]*\\n+\\s*([[:alnum:](])", "\\1 \\2", t2) # Omit line breaks within sentences
+  t2 <- gsub("([[:lower:]])\\s*\\-\\s*([[:lower:]])", "\\1\\2", t2)  # Omit line breaks within words
+  
+  writeLines(t2, paste0("../Clean_Texts/", all.texts[i]))
+}
 
