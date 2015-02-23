@@ -42,10 +42,10 @@ lapply(new.texts, function(i){
 
 ### Identify files with problems and use OCR to make text files
 # https://ryanfb.github.io/etc/2014/11/13/command_line_ocr_on_mac_os_x.html
-system("cd \"../Texts/\"; for f in *.txt; do echo \"$f\"; pcregrep -c '�' $f; done > \"crud.txt\"") # Count lines of garbage characters in each text file
-crud <- data.frame(matrix(readLines("../Texts/crud.txt"), ncol=2, byrow=T), stringsAsFactors = F) # Read in the counts
-crud$X2 <- as.numeric(crud$X2) # Reformat count variable as numeric rather than string
-crud <- crud[crud$X2 > 4, ] # Files with more than four lines of garbage characters have problems and need OCR'd
+system("cd \"../Texts/\"; for f in *.txt; do echo \"$f\"; pcregrep -c '�' $f;  pcregrep -ci '(m\\s?a\\s?r\\s?t\\s?e\\s?s|l\\s?u\\s?n\\s?e\\s?s|b\\s?a\\s?d\\s?o|feira|\\sos\\s)' $f; done > \"crud.txt\"") # Count lines of garbage characters (and days) in each text file
+crud <- data.frame(matrix(readLines("../Texts/crud.txt"), ncol=3, byrow=T), stringsAsFactors = F) # Read in the counts
+crud[, 2:3] <- lapply(crud[, 2:3], as.numeric) # Reformat count variable as numeric rather than string
+crud <- crud[crud$X2 > 4 | crud$X3 == 0, ] # Files with more than four lines of garbage characters (or no mention of days) have problems and need OCR'd
 
 dir.create("../Scanned_PDFs", showWarnings = FALSE) # Make Scanned_PDFs directory if it doesn't already exist
 dir.create("../Bad_Texts", showWarnings = FALSE) # Make Bad_Texts directory if it doesn't already exist
@@ -76,6 +76,7 @@ for (i in 1:length(all.texts)) {
   t2 <- gsub("\\n+\\s*\\d+\\s*\\n+", "\\\n", t)   # Omit lines with just page numbers
   t2 <- gsub("\\n[^\n]*(Cronolog|OSAL|Osal)[^\n]*\\n", "\\\n", t2)  # Omit lines with headers
   t2 <- gsub("([[:lower:]),])[[:blank:]]*\\n+\\s*([[:alnum:](])", "\\1 \\2", t2) # Omit line breaks within sentences
+  t2 <- gsub("([[:digit:]])[[:blank:]]*\\n+\\s*([[:lower:]])", "\\1 \\2", t2) # Omit line breaks at numbers within sentences
   t2 <- gsub("([[:lower:]])\\s*\\-\\s*([[:lower:]])", "\\1\\2", t2)  # Omit line breaks within words
   
   writeLines(t2, paste0("../Clean_Texts/", all.texts[i]))
