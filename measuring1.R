@@ -10,9 +10,9 @@ for (i in 1:length(coded)) {
 
 matrix <- create_matrix(cbind(data["text"]), language="spanish",
                         removeNumbers=TRUE, stemWords=FALSE, weighting=tm::weightTfIdf)
-container1 <- create_container(matrix, data$protest, trainSize=1:450, testSize=451:594, virgin=FALSE)
-models1 <- train_models(container1, algorithms=c("SVM","GLMNET","MAXENT", "SLDA","BOOSTING","BAGGING","RF","TREE")) #Also NNET
-#models1 <- train_models(container1, algorithms=c("SVM","GLMNET","MAXENT"))
+container1 <- create_container(matrix, data$protest, trainSize=1:round(.75*dim(data)[1]), testSize=(round(.75*dim(data)[1])+1):dim(data)[1], virgin=FALSE)
+#models1 <- train_models(container1, algorithms=c("SVM","GLMNET","MAXENT", "SLDA","BOOSTING","BAGGING","RF","TREE")) #Also NNET
+models1 <- train_models(container1, algorithms=c("SVM","GLMNET","MAXENT"))
 results1 <- classify_models(container1, models1)
 analytics1 <- create_analytics(container1, results1)
 
