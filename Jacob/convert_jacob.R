@@ -31,7 +31,7 @@ for (i in 1:length(coded)) {
   
   months <- c("Enero", "Febrero", "Marzo", "Mayo", "Abril", "Junio", "Julio", "Agosto", "Septiembre", "Octobre", "Novembre", "Diciembre")
   months2 <- unlist(lapply(months, function(i) paste(unlist(strsplit(i, split="")), collapse=" ")))
-  t$months <- cumsum(grepl(paste0("^(", paste(c(months, months2), collapse="|"), ")"), t$text, ignore.case=T))
+  t$months <- cumsum(grepl(paste0("(", paste(c(months, months2), collapse="|"), ")"), t$text, ignore.case=T))
   t <- t[t$months>0, 1:3]
   
   # t$text <- gsub("G L O S A R I O.*", "", t$text)

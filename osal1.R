@@ -88,7 +88,7 @@ for (i in 1:length(all.texts)) {
   t2 <- gsub("\\n[^\n]*(Cronolog|OSAL|Osal)[^\n]*\\n", "\\\n", t2)  # Omit lines with headers
   t2 <- gsub("([[:alpha:]),])[[:blank:]]*\\n+\\s*([[:alnum:](“])", "\\1 \\2", t2) # Omit line breaks within sentences
   t2 <- gsub("([[:digit:]])[[:blank:]]*\\n+\\s*([[:lower:]])", "\\1 \\2", t2) # Omit line breaks at numbers within sentences
-  t2 <- gsub("([[:lower:]])\\s*\\-\\s*([[:lower:]])", "\\1\\2", t2)  # Omit line breaks within words
+  t2 <- gsub("([[:alpha:]])\\s*\\-\\s*\\n\\s*([[:alpha:]])", "\\1\\2", t2)  # Omit line breaks within words
   
   t2 <- gsub("Glosario de Siglas", "Glosario de Siglas\n", t2, ignore.case=T)
   writeLines(t2, paste0("../Clean_Texts/", all.texts[i]))
