@@ -46,5 +46,5 @@ for (i in 1:length(coded)) {
   dat2$text <- dat2$text.y
   dat3 <- dat2[order(dat2$new_line), c(20, 2:16, 21)]
    
-  write.csv(dat3, file=paste0("Training/", coded[i], ".csv"))
+  write.csv(dat3, file=paste0("Training0/", coded[i], ".csv"))
 }
