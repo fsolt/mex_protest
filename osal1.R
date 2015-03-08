@@ -126,10 +126,3 @@ for (i in seq(length(all.texts))) {
   writeLines(t2, paste0("../Clean_Texts/", all.texts[i]))
 }
 
-for (i in seq(length(all.texts))) {
-  t <- i %>% paste0("../Clean_Texts/", ., ".txt") %>% 
-    readLines %>% 
-    data.frame(file = i, text = ., stringsAsFactors=F)
-
-  t <- left_join(t, meta)
-  
