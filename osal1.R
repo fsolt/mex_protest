@@ -13,6 +13,38 @@ p1 <- iconv(readLines(url1), "iso-8859-1", "UTF-8") # Read top page and convert 
 
 lines <- grep("href=\\\".*link=.*\\\"", p1, value=T) # Identify lines with link stubs
 
+meta <- gsub('.*link=([0-9]{1,4})\\.pdf&nombre=(.*[0-9]{4})\\\".*', "\\1 \\2", lines)
+meta <- gsub("Cronolol?g[ií]as? ", "", meta) %>% data.frame(all = ., stringsAsFactors=F)
+meta$file <- gsub("^([0-9]{1,4}).*", "\\1", meta$all) %>% as.numeric
+meta <- arrange(meta, file)
+
+countries <- c("Argentina", "Bolivia", "Brasil", "Chile", "Colombia", "Costa Rica", "Ecuador", 
+               "El Salvador", "Guatemala", "Honduras", "México", "Mexico", "Nicaragua", "Panamá",
+               "Panama", "Paraguay", "Perú", "Peru", "Puerto Rico", "República Dominicana",
+               "Republica Dominicana", "Uruguay", "Venezuela")
+months <- c("Enero", "Febrero", "Marzo", "Mayo", "Abril", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre")
+
+meta$country <- gsub(paste0(".*(", paste(countries, collapse="|"), ").*"), "\\1",  meta$all, ignore.case=T) 
+meta$year <- gsub(".*([0-9]{4})$", "\\1", meta$all) %>% as.numeric
+meta$months <- gsub(paste0(".*(", paste(countries, collapse="|"), ") (.*) [0-9]{4}"), "\\2",  meta$all, ignore.case=T)
+
+meta$first_month[grep("-", meta$months, invert=T)] <- meta$months[grep("-", meta$months, invert=T)]
+meta$first_month[grep("-", meta$months)] <- gsub(paste0("^(", paste(months, collapse="|"), ")-.*"), 
+                                                 "\\1", meta$months[grep("-", meta$months)],
+                                                 ignore.case=T) 
+meta$first_month <- paste0(toupper(substring(meta$first_month, 1, 1)), substring(meta$first_month, 2))
+
+meta$last_month[grep("-", meta$months, invert=T)] <- meta$first_month[grep("-", meta$months, invert=T)]
+meta$last_month[grep("-", meta$months)] <- gsub(paste0(".*-(", paste(months, collapse="|"), ")$"), 
+                                                 "\\1", meta$months[grep("-", meta$months)], ignore.case=T) 
+
+for (i in seq_len(dim(meta)[1])) {
+  meta$all_months[i] <- paste(months[which(months==meta$first_month[i]):which(months==meta$last_month[i])], collapse=" ")
+}
+
+meta <- select(meta, file:year, all_months)
+write.csv(meta, "file_metadata.csv", row.names=F)
+
 all.links <- gsub(pattern=".*href=\\\".*(link=[0-9]*\\.pdf).*", 
 	replacement="http://www.clacso.org.ar/documentos_osal/descargar.php?\\1", x=lines) # Generate full links
 
@@ -67,7 +99,7 @@ system("mv ../Texts/crud.txt ../Bad_Texts/crud.txt")   # Move file with count of
 # First cut in "OSAL/OSAL2/osal_text_test.do"
 dir.create("../Clean_Texts", showWarnings = FALSE) # Make Clean_Texts directory if it doesn't already exist
 
-for (i in 1:length(all.texts)) {
+for (i in seq(length(all.texts))) {
   text.file <- paste0("../Texts/", all.texts[i])
 #  t <- readChar(text.file, file.info(text.file)$size) # Doesn't work because of embedded nuls in some text files (e.g., 100.txt)
   t0 <- readBin(text.file, file.info(text.file)$size, what="raw") # Work around to account for embedded nuls in text files
@@ -77,7 +109,7 @@ for (i in 1:length(all.texts)) {
   days2 <- unlist(lapply(days, function(i) paste(unlist(strsplit(i, split="")), collapse=" ")))
   t2 <- gsub(paste0("\\n((?:", paste(days, collapse="|"), ")[[:blank:]]*[0-9]{1,2})\\n"), "\n\n\\1\n\n",  t, ignore.case=T) # Add extra line breaks around days
   t2 <- gsub(paste0("((?:", paste(days2, collapse="|"), ")[[:blank:]]*[0-9])([[:blank:]]*[0-9])?"), "\n\n\\1\\2\n\n",  t2, ignore.case=T) # Add extra line breaks around days
-  months <- c("Enero", "Febrero", "Marzo", "Mayo", "Abril", "Junio", "Julio", "Agosto", "Septiembre", "Octobre", "Novembre", "Diciembre")
+  months <- c("Enero", "Febrero", "Marzo", "Mayo", "Abril", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre")
   months2 <- unlist(lapply(months, function(i) paste(unlist(strsplit(i, split="")), collapse=" ")))
   t2 <- gsub(paste0("\\n((?:", paste(months, collapse="|"), ")[[:blank:]]*(de [0-9]{4})?)\\n"), "\n\n\\1\n\n",  t2, ignore.case=T) # Add extra line breaks around months
   t2 <- gsub(paste0("((?:", paste(months2, collapse="|"), ")[[:blank:]]*(de [0-9]{4})?)"), "\n\\1.\n",  t2, ignore.case=T) # Add extra line breaks around months
@@ -94,3 +126,10 @@ for (i in 1:length(all.texts)) {
   writeLines(t2, paste0("../Clean_Texts/", all.texts[i]))
 }
 
+for (i in seq(length(all.texts))) {
+  t <- i %>% paste0("../Clean_Texts/", ., ".txt") %>% 
+    readLines %>% 
+    data.frame(file = i, text = ., stringsAsFactors=F)
+
+  t <- left_join(t, meta)
+  
